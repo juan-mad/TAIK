@@ -293,48 +293,64 @@ class GameState():
 
         # Check for paths
         # A path must start/end in col 0 or in row 0. We first check in col 0, then in row 0
+        # startPieces holds the white pieces (later the black ones) that are in the upper row and rightmost column.
         startPieces = self.startPoints.intersection(whitePieces)
-        if startPieces != set():
+        if startPieces != set():  # If this set isn't empty, we check for a path
             self.check_path("w", startPieces, whitePieces)
         startPieces = self.startPoints.intersection(blackPieces)
         if startPieces != set():
             self.check_path("b", startPieces, blackPieces)
 
     def check_path(self, color, startPieces, pieces):
-        aux = True
-        toCheck = startPieces.copy()
-        checked = set()
-        pathcol = set()
-        pathrow = set()
+        pathContinues = True
+        beginningExists = True
+        pathBeginning = startPieces.copy()
 
-        while aux:
-            piece = toCheck.pop()
-            checked.add(piece)
-            c = piece[0]
-            r = piece[1]
-            pathcol.add(c)
-            pathrow.add(r)
+        while beginningExists:
+            piece = pathBeginning.pop()
+            toCheck = {piece}
+            checked = set()
+            pathcol = set()
+            pathrow = set()
+            pathContinues = True
 
-            if c + 1 < self.dim:
-                if (not {(c + 1, r)}.issubset(checked)) and self.roadBoard[c + 1][r] == color:
-                    toCheck.add((c + 1, r))
-            if c - 1 >= 0:
-                if (not {(c - 1, r)}.issubset(checked)) and self.roadBoard[c - 1][r] == color:
-                    toCheck.add((c - 1, r))
-            if r + 1 < self.dim:
-                if (not {(c, r + 1)}.issubset(checked)) and self.roadBoard[c][r + 1] == color:
-                    toCheck.add((c, r + 1))
-            if r - 1 >= 0:
-                if (not {(c, r - 1)}.issubset(checked)) and self.roadBoard[c][r - 1] == color:
-                    toCheck.add((c, r - 1))
-            if toCheck == set():
-                aux = False
+            while pathContinues:
+                piece = toCheck.pop()
+                checked.add(piece)
+                c = piece[0]
+                r = piece[1]
+                pathcol.add(c)
+                pathrow.add(r)
+
                 if pathcol == self.ROAD or pathrow == self.ROAD:
+                    beginningExists = False
+                    pathContinues = False
                     self.winner = color
                     if color == 'w':
                         print("White Road Victory")
                     if color == 'b':
                         print("Black Road Victory")
+                    break
+
+                if c + 1 < self.dim:
+                    if (not {(c + 1, r)}.issubset(checked)) and self.roadBoard[c + 1][r] == color:
+                        toCheck.add((c + 1, r))
+                if c - 1 >= 0:
+                    if (not {(c - 1, r)}.issubset(checked)) and self.roadBoard[c - 1][r] == color:
+                        toCheck.add((c - 1, r))
+                if r + 1 < self.dim:
+                    if (not {(c, r + 1)}.issubset(checked)) and self.roadBoard[c][r + 1] == color:
+                        toCheck.add((c, r + 1))
+                if r - 1 >= 0:
+                    if (not {(c, r - 1)}.issubset(checked)) and self.roadBoard[c][r - 1] == color:
+                        toCheck.add((c, r - 1))
+
+                if toCheck == set():
+                    pathContinues = False
+                    if pathBeginning == set():
+                        beginningExists = False
+
+
 
 
 class Action():
