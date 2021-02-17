@@ -296,12 +296,52 @@ class GameState():
         # startPieces holds the white pieces (later the black ones) that are in the upper row and rightmost column.
         startPieces = self.startPoints.intersection(whitePieces)
         if startPieces != set():  # If this set isn't empty, we check for a path
-            self.check_path("w", startPieces, whitePieces)
+            self.check_path("w", startPieces)
         startPieces = self.startPoints.intersection(blackPieces)
         if startPieces != set():
-            self.check_path("b", startPieces, blackPieces)
+            self.check_path("b", startPieces)
 
-    def check_path(self, color, startPieces, pieces):
+        # Check for flat win
+        # If a player has no pieces left
+        if ((self.whiteCount == self.piecenum and self.whiteCapCount == self.capnum) or
+                (self.blackCount == self.piecenum and self.blackCapCount == self.capnum)):
+            self.check_flat_win()
+
+        # If there are no free spaces left
+        freeSpaceLeft = False
+        for c in range(self.dim):
+            for r in range(self.dim):
+                if self.board[c][r] == '':
+                    freeSpaceLeft = True
+                    break
+            else:  # This 'else' is only entered if the inner for loop is not broken.
+                continue
+            break  # If the inner loop was broken, we want to break the outer loop too.
+
+        if not freeSpaceLeft:
+            self.check_flat_win()
+
+    def check_flat_win(self):
+        topBoard = copy.deepcopy(self.board)
+        count = 0
+        for c in range(self.dim):
+            for r in range(self.dim):
+                if topBoard[c][r][-1:] == 'w':
+                    count += 1
+                if topBoard[c][r][-1:] == 'b':
+                    count -= 1
+
+        if count == 0:
+            self.winner = 'tie'
+            print("Game ended in TIE")
+        if count > 0:
+            self.winner = 'w'
+            print("White flat win")
+        if count < 0:
+            self.winner = 'b'
+            print("Black flat win")
+
+    def check_path(self, color, startPieces):
         pathContinues = True
         beginningExists = True
         pathBeginning = startPieces.copy()
