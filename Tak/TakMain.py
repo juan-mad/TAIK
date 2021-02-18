@@ -5,9 +5,9 @@ Main driver file, responsible for handling user input and displaying
 
 import pygame as p
 import math as m
-from Tak import TakEngine as t
+import TakEngine as t
 
-WIDTH = HEIGHT = 800
+WIDTH = HEIGHT = 600
 MAX_FPS = 15
 DIM = 6
 SQSIZE = m.floor((WIDTH-100)/DIM)
@@ -16,7 +16,6 @@ IMAGES = {}
 '''
 Initialise a global dictionary of images. This will be called exactly once in the main
 '''
-
 
 def loadImages():
     # 'w' and 'b' are white and black flats respectively
