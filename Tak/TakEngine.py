@@ -52,7 +52,7 @@ class GameState():
         self.whiteCapCount = 0
         self.blackCount = 0
         self.blackCapCount = 0
-
+        
         self.roadBoard = []
         self.startPoints = set()
         for i in range(self.dim):
@@ -64,15 +64,17 @@ class GameState():
         self.filesToCols = {}
         self.colsToFiles = {}
         for i in range(dim):
-            self.ranksToRows[chr(49 + i)] = dim - i - 1
-            self.filesToCols[chr(97 + i)] = i
+            self.ranksToRows[chr(49 + i)] = dim - i - 1  #chr(49) = '1'
+            self.filesToCols[chr(97 + i)] = i  #chr(97) = 'a', chr(65) = 'A'
 
         self.rowsToRanks = {v: k for k, v in self.ranksToRows.items()}
         self.colsToFiles = {v: k for k, v in self.filesToCols.items()}
 
         self.whiteTurn = False
         self.initialTurn = True
-        self.actionLog = []
+        self.actionLog = []  # Not really sure if this is very useful
+        self.moveLog = []  # Stores, in Tak notation, every move made
+        self.log = ""
         self.pieceType = "flat"
         self.movingStack = False
         self.stack = ""
@@ -113,6 +115,7 @@ class GameState():
         return actions
 
     def make_action(self, action, gs):
+        self.log = ""
         '''
         SETTING A NEW PIECE IN THE BOARD
         '''
@@ -121,11 +124,10 @@ class GameState():
             if self.whiteTurn:  # white's turn
                 self.board[action.pos[0]][action.pos[1]] += "w"
                 self.whiteCount = self.whiteCount + 1
-                print(self.whiteCount)
             else:  # black's turn
                 self.board[action.pos[0]][action.pos[1]] += "b"
                 self.blackCount = self.blackCount + 1
-                print(self.blackCount)
+            self.log = action.get_tak_square(self)
             self.change_turn()
 
         # If user wants to set a standing stone
@@ -136,6 +138,7 @@ class GameState():
             else:  # black's turn
                 self.board[action.pos[0]][action.pos[1]] += "n"
                 self.blackCount += 1
+            self.log = "S" + action.get_tak_square(self)
             self.change_turn()
 
         # If user wants to set a standing stone
@@ -146,6 +149,7 @@ class GameState():
             else:  # black's turn
                 self.board[action.pos[0]][action.pos[1]] += "Z"
                 self.blackCapCount += 1
+            self.log = "C" + action.get_tak_square(self)
             self.change_turn()
 
         '''
@@ -160,7 +164,9 @@ class GameState():
             self.stackPos[0] = self.stackOrigin[0]
             self.stackPos[1] = self.stackOrigin[1]
             self.movingStack = True
-
+            
+            self.log = action.get_tak_square(self)
+            
             # The change of turns when moving a stack will take place in the method move_stack
         # Record the action in the log
         self.actionLog.append(action)
@@ -209,7 +215,6 @@ class GameState():
 
         # Click on valid adjacent square to move the stack
         # self.dir controls the selected direction
-        # TO DO: check if top piece of adjacent stack is flatstone so that move is legal
 
         # Move to right sq
         if clickpos == (self.stackPos[0] + 1, self.stackPos[1]) and self.stackPos[0] < (
@@ -219,6 +224,9 @@ class GameState():
                     self.board[self.stackPos[0] + 1][self.stackPos[1]][-1:] == 'w'):
                 # if no move direction has been selected, or it has and the move is correct, proceed
                 if self.moveDir == 0 or self.moveDir == -1:
+                    if self.moveDir == -1:
+                        if len(self.stack) > 1:  # chr(49) = '1'
+                            self.log = chr(48 + len(self.stack)) + self.log + ">"
                     self.stackPos[0] += 1
                     self.leftPiece = False
                     self.moveDir = 0
@@ -265,6 +273,7 @@ class GameState():
         # Once no controllable stack remains, end the action, this time it is complete
 
     def change_turn(self):
+        print(self.log)
         # Checks (road) victory
         self.check_victory()
 
@@ -391,15 +400,13 @@ class GameState():
                         beginningExists = False
 
 
-
-
 class Action():
     def __init__(self, pos, move, gs):
         self.dim = gs.dim
         self.move = move
         self.pos = pos
 
-    def get_tak_notation(self, gs):
+    def get_tak_square(self, gs):
         return gs.colsToFiles[self.pos[0]] + gs.rowsToRanks[self.pos[1]]
 
     def __eq__(self, other):
